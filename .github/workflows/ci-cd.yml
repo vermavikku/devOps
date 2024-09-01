@@ -29,12 +29,14 @@ jobs:
 
     - name: Build project
       run: npm run build
+      # Add a step to verify the build output if needed
+      # You can add more checks or validations here if necessary
 
     - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && success()  # Ensure this runs only if previous steps were successful
       uses: peaceiris/actions-gh-pages@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.ACTION_TOKEN }}  # Ensure this secret is set up with the correct permissions
         publish_dir: ./dist
         publish_branch: gh-pages  # Ensure this is the branch you want to deploy to
         force_orphan: true        # Create the branch if it doesn't exist
