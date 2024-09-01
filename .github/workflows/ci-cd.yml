@@ -51,6 +51,12 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+    - name: Debug SSH Connectivity
+      run: |
+        echo "Checking SSH connectivity..."
+        nc -zv 192.168.0.106 22 || echo "Port 22 is not reachable"
+        ssh -o StrictHostKeyChecking=no -T vikasms07@192.168.0.106 || echo "SSH connection failed"
+
     - name: Deploy to Server
       env:
         SERVER_USER: vikasms07
