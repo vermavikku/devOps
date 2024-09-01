@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '18.16.0' # Adjust to your desired Node.js version
+        node-version: '18.16.0'  # Specify the Node.js version
 
     - name: Install dependencies
       run: npm install
@@ -36,3 +36,7 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dist
+        publish_branch: gh-pages  # Ensure this is the branch you want to deploy to
+        force_orphan: true        # Create the branch if it doesn't exist
+        user_name: 'github-actions'  # Optional: Customize the commit author name
+        user_email: 'github-actions@github.com'  # Optional: Customize the commit author email
