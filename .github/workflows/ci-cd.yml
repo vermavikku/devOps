@@ -1,69 +1,44 @@
-name: CI/CD for Vite React App
+name: Deploy to Server
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - main  # Adjust to your deployment branch, e.g., 'main' or 'master'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '18.16.0'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Run lint
-      run: npm run lint
-
-    - name: Build project
-      run: npm run build
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: build
-        path: ./dist
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build
 
     steps:
-    - name: Download build artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: build
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up SSH agent
-      uses: webfactory/ssh-agent@v0.8.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Use the version your project requires
 
-    - name: Debug SSH Connectivity
-      run: |
-        echo "Checking SSH connectivity..."
-        nc -zv 192.168.0.106 22 || echo "Port 22 is not reachable"
-        ssh -o StrictHostKeyChecking=no -T vikasms07@192.168.0.106 || echo "SSH connection failed"
+      - name: Install dependencies
+        run: npm install
 
-    - name: Deploy to Server
-      env:
-        SERVER_USER: vikasms07
-        SERVER_HOST: 192.168.0.106
-        SERVER_PORT: 22
-        SERVER_DIR: /var/www/my-react-app
-      run: |
-        ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "mkdir -p $SERVER_DIR"
-        rsync -avz --delete ./dist/ $SERVER_USER@$SERVER_HOST:$SERVER_DIR
-        ssh $SERVER_USER@$SERVER_HOST "cd $SERVER_DIR && npm install --production && pm2 restart all"
+      - name: Run tests (optional)
+        run: npm test
+
+      - name: Deploy to server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PATH: "/var/www/your-app-folder" # Adjust to your server path
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SERVER_USER@$SERVER_IP << 'EOF'
+            cd $SERVER_PATH
+            git pull origin main  # Adjust if necessary
+            npm install --production  # Only for production dependencies
+            pm2 restart all  # Restart PM2-managed processes, or use another process manager if needed
+          EOF
+        shell: bash
+      - name: Clean up
+        run: rm private_key.pem
