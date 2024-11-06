@@ -35,7 +35,7 @@ jobs:
           chmod 600 private_key.pem
           
           # Copy build files to the server using rsync over SSH
-          rsync -avz -e "ssh -i private_key.pem -o StrictHostKeyChecking=no" dist/ $SERVER_USER@$SERVER_IP:$SERVER_PATH
+          rsync -avz -e "ssh -vvv -i private_key.pem -o StrictHostKeyChecking=no" dist/ $SERVER_USER@$SERVER_IP:$SERVER_PATH
           
           # (Optional) If you want to restart any services on the server, add commands here
         shell: bash
