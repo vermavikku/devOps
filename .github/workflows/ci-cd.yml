@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main  # Adjust to your deployment branch, e.g., 'main' or 'master'
+      - main  # Adjust to your deployment branch
 
 jobs:
   deploy:
@@ -16,10 +16,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Use the version your project requires
+          node-version: '16' # Ensure this matches your project's requirements
 
       - name: Install dependencies
         run: npm install
+
+      - name: Build project
+        run: npm run build
 
       - name: Deploy to server
         env:
@@ -30,12 +33,12 @@ jobs:
         run: |
           echo "$SSH_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $SERVER_USER@$SERVER_IP << 'EOF'
-            cd $SERVER_PATH
-            git pull origin main  # Adjust if necessary
-            npm install --production  # Only for production dependencies
-            pm2 restart all  # Restart PM2-managed processes, or use another process manager if needed
-          EOF
+          
+          # Copy build files to the server using rsync over SSH
+          rsync -avz -e "ssh -i private_key.pem -o StrictHostKeyChecking=no" dist/ $SERVER_USER@$SERVER_IP:$SERVER_PATH
+          
+          # (Optional) If you want to restart any services on the server, add commands here
         shell: bash
+
       - name: Clean up
         run: rm private_key.pem
